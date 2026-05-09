@@ -6,11 +6,22 @@ pygame.display.set_caption("TheManIsSeekingForTruth")
 CELL_SIZE = 30
 GRID_SIZE = 16
 player_x, player_y = 8, 8
-colors = [[(random.randint(100, 200), random.randint(100, 200), random.randint(100, 200))
-          for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
+color_to_sprite = {
+    (255, 255, 0): "desert.jpg",
+    (0, 100, 0): "taiga.jpg",
+    (0, 0, 255): "ocean.jpg",
+    (128, 128, 128): "mountains.jpg",
+    (0, 128, 0): "forest.jpg",
+    (165, 42, 42): "steppe.jpg",
+    (128, 0, 128): "mushroom_plain.jpg"
+}
+color_palette = list(color_to_sprite.keys())
+sprites = {}
+for color, sprite_file in color_to_sprite.items():
+    sprite = pygame.image.load(sprite_file)
+    sprites[color] = pygame.transform.scale(sprite, (CELL_SIZE, CELL_SIZE))
+colors = [[random.choice(color_palette) for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
 clock = pygame.time.Clock()
-img = pygame.image.load('icon.gif')
-pygame.display.set_icon(img)
 running = True
 while running:
     for event in pygame.event.get():
@@ -30,14 +41,17 @@ while running:
     start_y = (600 - GRID_SIZE * CELL_SIZE) // 2
     for y in range(GRID_SIZE):
         for x in range(GRID_SIZE):
-            rect = pygame.Rect(start_x + x * CELL_SIZE, start_y + y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+            rect_pos = (start_x + x * CELL_SIZE, start_y + y * CELL_SIZE)
+            color = colors[y][x]
             if x == player_x and y == player_y:
-                pygame.draw.rect(window, (255, 255, 0), rect)
+                pygame.draw.rect(window, (255, 255, 0), (*rect_pos, CELL_SIZE, CELL_SIZE))
             else:
-                pygame.draw.rect(window, colors[y][x], rect)
+                pygame.draw.rect(window, color, (*rect_pos, CELL_SIZE, CELL_SIZE))
+    current_color = colors[player_y][player_x]
+    current_sprite = sprites[current_color]
+    window.blit(current_sprite, (660, 70))
     pygame.draw.rect(window, (50, 50, 80), (650, 50, 120, 180))
     pygame.draw.rect(window, (200, 200, 200), (650, 50, 120, 180), 2)
-    pygame.draw.rect(window, colors[player_y][player_x], (660, 70, 100, 100))
     pygame.display.update()
     clock.tick(60)
 pygame.quit()
