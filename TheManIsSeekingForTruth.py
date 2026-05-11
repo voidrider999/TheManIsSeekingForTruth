@@ -14,6 +14,7 @@ def randpos():
     return random.choice(list(range(0, 4)) + list(range(13, 17)))
 
 player_col, player_row = randpos(), randpos()
+truth_pos = None
 
 pygame.init()
 window = pygame.display.set_mode((SCREEN_W, SCREEN_H))
@@ -32,8 +33,15 @@ biome_colors = list(biomes.keys())
 biome_images = {}
 for biome_color, biome_file in biomes.items():
     image = pygame.image.load(biome_file)
-    biome_images[biome_color] = pygame.transform.scale(image, (200, 200))
-grid = [[random.choice(biome_colors) for _ in range(17)] for _ in range(17)]
+    biome_images[biome_color] = pygame.transform.scale(image, (204, 204))
+
+grid = []
+for row in range(17):
+    grid_row = []
+    for col in range(17):
+        biome_color = random.choice(biome_colors)
+        grid_row.append(biome_color)
+    grid.append(grid_row)
 
 clock = pygame.time.Clock()
 running = True
@@ -51,19 +59,39 @@ while running:
             elif event.key == pygame.K_DOWN and player_row < 16:
                 player_row += 1
 
+    if player_row == 8 and player_col == 8 and truth_pos is None:
+        truth_pos = (randpos(), randpos())
+
     window.fill((234, 212, 252))
     for row in range(17):
         for col in range(17):
-            cell_pos = (col * 30 + GRID_X, row * 30 + GRID_Y)
+            rect = (col * 30 + GRID_X, row * 30 + GRID_Y)
             biome_color = grid[row][col]
             if args.debug and (row, col) == (player_row, player_col):
-                pygame.draw.rect(window, PLAYER_DEBUG_COLOR, (cell_pos[0], cell_pos[1], 30, 30))
+                pygame.draw.rect(window, PLAYER_DEBUG_COLOR, (rect[0], rect[1], 30, 30))
             else:
-                pygame.draw.rect(window, biome_color, (cell_pos[0], cell_pos[1], 30, 30))
+                pygame.draw.rect(window, biome_color, (rect[0], rect[1], 30, 30))
 
+    # Рисовать биом
     current_color = grid[player_row][player_col]
-    current_image = biome_images[current_color]
-    window.blit(current_image, (565, 20))
+    biome_image = biome_images[current_color]
+    window.blit(biome_image, (565, 20))
+
+    # Рисовать мини-карту
+    if truth_pos:
+        for row in range(17):
+            for col in range(17):
+                rect = (565 + col * 12, 240 + row * 12, 12, 12)
+                biome_color = grid[row][col]
+
+                if (row, col) == truth_pos and (pygame.time.get_ticks() // 500) % 2 == 0:
+                    # Инвертируем цвет: вычитаем R, G и B из 255
+                    display_color = (255 - biome_color[0], 255 - biome_color[1], 255 - biome_color[2])
+                else:
+                    display_color = biome_color
+
+                pygame.draw.rect(window, display_color, rect)
+
     pygame.display.update()
     clock.tick(60)
 pygame.quit()
