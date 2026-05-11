@@ -10,15 +10,22 @@ SCREEN_W, SCREEN_H = 800, 600
 GRID_X, GRID_Y = 20, 20 # Левый верхний угол таблицы в пикселях
 PLAYER_DEBUG_COLOR = (0, 0, 0)
 
+pygame.init()
+window = pygame.display.set_mode((SCREEN_W, SCREEN_H))
+pygame.display.set_caption("TheManIsSeekingForTruth")
+
+pygame.init()
+window = pygame.display.set_mode((SCREEN_W, SCREEN_H))
+pygame.display.set_caption("TheManIsSeekingForTruth")
+
 def randpos():
     return random.choice(list(range(0, 4)) + list(range(13, 17)))
 
 player_col, player_row = randpos(), randpos()
 truth_pos = None
 
-pygame.init()
-window = pygame.display.set_mode((SCREEN_W, SCREEN_H))
-pygame.display.set_caption("TheManIsSeekingForTruth")
+steps_count = 0
+font = pygame.font.SysFont(None, 32) # Стандартный шрифт, размер 32
 
 biomes = {
     (255, 255, 0): "desert.jpg",
@@ -50,6 +57,7 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.KEYDOWN:
+            old_pos = (player_col, player_row)
             if event.key == pygame.K_LEFT and player_col > 0:
                 player_col -= 1
             elif event.key == pygame.K_RIGHT and player_col < 16:
@@ -58,6 +66,10 @@ while running:
                 player_row -= 1
             elif event.key == pygame.K_DOWN and player_row < 16:
                 player_row += 1
+
+            # Если кортеж координат изменился — прибавляем шаг
+            if (player_col, player_row) != old_pos:
+                steps_count += 1
 
     if player_row == 8 and player_col == 8 and truth_pos is None:
         truth_pos = (randpos(), randpos())
@@ -84,13 +96,19 @@ while running:
                 rect = (565 + col * 12, 240 + row * 12, 12, 12)
                 biome_color = grid[row][col]
 
-                if (row, col) == truth_pos and (pygame.time.get_ticks() // 500) % 2 == 0:
-                    # Инвертируем цвет: вычитаем R, G и B из 255
-                    display_color = (255 - biome_color[0], 255 - biome_color[1], 255 - biome_color[2])
+                if (row, col) == truth_pos:
+                    if (pygame.time.get_ticks() // 500) % 2 == 0:
+                        display_color = (255, 0, 255)
+                    else:
+                        display_color = (50, 200, 200)
                 else:
                     display_color = biome_color
 
                 pygame.draw.rect(window, display_color, rect)
+
+    # Отрисовка текста под основной картой
+    steps_text = font.render(f"Шаги: {steps_count}", True, (0, 0, 0)) # Черный текст
+    window.blit(steps_text, (GRID_X, 540)) # 10 пикселей отступ под сеткой
 
     pygame.display.update()
     clock.tick(60)
