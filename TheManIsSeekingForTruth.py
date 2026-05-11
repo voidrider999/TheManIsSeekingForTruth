@@ -4,7 +4,10 @@ import random
 SCREEN_W, SCREEN_H = 800, 600
 GRID_X, GRID_Y = 20, 20 # Левый верхний угол таблицы в пикселях
 
-player_col, player_row = 0, 0
+def randpos():
+    return random.choice(list(range(0, 4)) + list(range(13, 17)))
+
+player_col, player_row = randpos(), randpos()
 
 pygame.init()
 window = pygame.display.set_mode((SCREEN_W, SCREEN_H))
