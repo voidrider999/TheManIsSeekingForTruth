@@ -1,8 +1,14 @@
 import pygame
 import random
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--debug', action='store_true')
+args = parser.parse_args()
 
 SCREEN_W, SCREEN_H = 800, 600
 GRID_X, GRID_Y = 20, 20 # Левый верхний угол таблицы в пикселях
+PLAYER_DEBUG_COLOR = (0, 0, 0)
 
 def randpos():
     return random.choice(list(range(0, 4)) + list(range(13, 17)))
@@ -50,8 +56,8 @@ while running:
         for col in range(17):
             cell_pos = (col * 30 + GRID_X, row * 30 + GRID_Y)
             biome_color = grid[row][col]
-            if (row, col) == (player_row, player_col):
-                pygame.draw.rect(window, (255, 255, 0), (cell_pos[0], cell_pos[1], 30, 30))
+            if args.debug and (row, col) == (player_row, player_col):
+                pygame.draw.rect(window, PLAYER_DEBUG_COLOR, (cell_pos[0], cell_pos[1], 30, 30))
             else:
                 pygame.draw.rect(window, biome_color, (cell_pos[0], cell_pos[1], 30, 30))
 
