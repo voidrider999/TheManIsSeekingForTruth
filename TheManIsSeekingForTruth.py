@@ -14,10 +14,6 @@ pygame.init()
 window = pygame.display.set_mode((SCREEN_W, SCREEN_H))
 pygame.display.set_caption("TheManIsSeekingForTruth")
 
-pygame.init()
-window = pygame.display.set_mode((SCREEN_W, SCREEN_H))
-pygame.display.set_caption("TheManIsSeekingForTruth")
-
 def randpos():
     return random.choice(list(range(0, 4)) + list(range(13, 17)))
 
@@ -26,6 +22,7 @@ truth_pos = None
 
 steps_count = 0
 font = pygame.font.SysFont(None, 32) # Стандартный шрифт, размер 32
+victory_font = pygame.font.SysFont(None, 100)
 
 biomes = {
     (255, 255, 0): "desert.jpg",
@@ -50,13 +47,18 @@ for row in range(17):
         grid_row.append(biome_color)
     grid.append(grid_row)
 
+game_over = False
+overlay = pygame.Surface((SCREEN_W, SCREEN_H))
+overlay.set_alpha(128)
+overlay.fill((0, 0, 0))
+
 clock = pygame.time.Clock()
 running = True
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        elif event.type == pygame.KEYDOWN:
+        elif event.type == pygame.KEYDOWN and not game_over:
             old_pos = (player_col, player_row)
             if event.key == pygame.K_LEFT and player_col > 0:
                 player_col -= 1
@@ -73,6 +75,9 @@ while running:
 
     if player_row == 8 and player_col == 8 and truth_pos is None:
         truth_pos = (randpos(), randpos())
+
+    if truth_pos and (player_row, player_col) == truth_pos:
+        game_over = True
 
     window.fill((234, 212, 252))
     for row in range(17):
@@ -109,6 +114,12 @@ while running:
     # Отрисовка текста под основной картой
     steps_text = font.render(f"Шаги: {steps_count}", True, (0, 0, 0)) # Черный текст
     window.blit(steps_text, (GRID_X, 540)) # 10 пикселей отступ под сеткой
+
+    if game_over:
+        window.blit(overlay, (0, 0))
+        victory_text = victory_font.render("ПОБЕДА", True, (255, 0, 0))
+        text_rect = victory_text.get_rect(center=(SCREEN_W // 2, SCREEN_H - 35))
+        window.blit(victory_text, text_rect)
 
     pygame.display.update()
     clock.tick(60)
