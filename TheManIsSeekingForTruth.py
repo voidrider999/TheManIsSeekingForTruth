@@ -14,6 +14,10 @@ pygame.init()
 window = pygame.display.set_mode((SCREEN_W, SCREEN_H))
 pygame.display.set_caption("TheManIsSeekingForTruth")
 
+pygame.mixer.init()
+pygame.mixer_music.load('harmony_in_the_mists_loop.ogg')
+pygame.mixer.music.play(-1)
+
 def randpos():
     return random.choice(list(range(0, 4)) + list(range(13, 17)))
 
