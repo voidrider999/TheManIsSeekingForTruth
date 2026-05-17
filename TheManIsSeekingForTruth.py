@@ -29,7 +29,11 @@ steps_count = 0
 font = pygame.font.SysFont(None, 32) # Стандартный шрифт, размер 32
 gameover_font = pygame.font.SysFont(None, 100)
 
+morpheus_small = pygame.image.load("morpheus.jpg")
+morpheus_small = pygame.transform.scale(morpheus_small, (30, 30))
+
 biomes = {
+    (0, 0, 0): "morpheus.jpg",
     (255, 255, 0): "desert.jpg",
     (0, 100, 0): "taiga.jpg",
     (0, 0, 255): "ocean.jpg",
@@ -38,7 +42,7 @@ biomes = {
     (165, 42, 42): "steppe.jpg",
     (128, 0, 128): "mushroom_plain.jpg"
 }
-biome_colors = list(biomes.keys())
+biome_colors = list(biomes.keys())[1:] # все кроме Морфеуса
 biome_images = {}
 for biome_color, biome_file in biomes.items():
     image = pygame.image.load(biome_file)
@@ -51,6 +55,7 @@ for row in range(17):
         biome_color = random.choice(biome_colors)
         grid_row.append(biome_color)
     grid.append(grid_row)
+grid[8][8] = (0, 0, 0) # Морфеус
 
 gameover = False
 overlay = pygame.Surface((SCREEN_W, SCREEN_H))
@@ -95,6 +100,8 @@ while running:
             biome_color = grid[row][col]
             if args.debug and (row, col) == (player_row, player_col):
                 pygame.draw.rect(window, PLAYER_DEBUG_COLOR, (rect[0], rect[1], 30, 30))
+            elif row == 8 and col == 8:
+                window.blit(morpheus_small, (rect[0], rect[1]))
             else:
                 pygame.draw.rect(window, biome_color, (rect[0], rect[1], 30, 30))
 
