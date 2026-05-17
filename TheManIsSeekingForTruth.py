@@ -1,6 +1,8 @@
-import pygame
-import random
 import argparse
+import math
+import random
+
+import pygame
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--debug', action='store_true')
@@ -21,6 +23,38 @@ pygame.mixer.music.play(-1)
 
 def randpos():
     return random.choice(list(range(0, 4)) + list(range(13, 17)))
+
+def draw_biome(window, base_image, player_pos, truth_pos, draw_pos, gameover):
+    player_row, player_col = player_pos
+
+    # 1. Если это центр ИЛИ игра окончена — картинка статична (масштаб 1.0)
+    if (player_row == 8 and player_col == 8) or gameover:
+        pulse = 1.0
+    else:
+        # 2. Обычный расчет пульса для игрового процесса
+        target_row, target_col = (8, 8) if truth_pos is None else truth_pos
+        distance = abs(player_row - target_row) + abs(player_col - target_col)
+        distance = max(1.0, min(distance, 16.0))
+
+        heart_rate = 0.0099 - (distance * 0.0004)
+        time_val = pygame.time.get_ticks() * heart_rate
+
+        beat1 = math.sin(time_val) ** 16
+        beat2 = 0.5 * math.sin(time_val + 0.4) ** 16
+        cardiogram = beat1 + beat2
+        pulse = 1.0 + cardiogram * 0.08
+
+    # 3. Расчет геометрии и отрисовка
+    orig_w, orig_h = base_image.get_size()
+    new_w = int(orig_w * pulse)
+    new_h = int(orig_h * pulse)
+
+    offset_x = (204 - new_w) // 2
+    offset_y = (204 - new_h) // 2
+    start_x, start_y = draw_pos
+
+    animated_image = pygame.transform.scale(base_image, (new_w, new_h))
+    window.blit(animated_image, (start_x + offset_x, start_y + offset_y))
 
 player_col, player_row = randpos(), randpos()
 truth_pos = None
@@ -108,7 +142,8 @@ while running:
     # Рисовать биом
     current_color = grid[player_row][player_col]
     biome_image = biome_images[current_color]
-    window.blit(biome_image, (565, 20))
+    player_pos = (player_row, player_col)
+    draw_biome(window, biome_image, player_pos, truth_pos, (565, 20), gameover)
 
     # Рисовать мини-карту
     if truth_pos:
