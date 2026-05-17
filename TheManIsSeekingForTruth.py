@@ -21,6 +21,15 @@ pygame.mixer.init()
 pygame.mixer_music.load('harmony_in_the_mists_loop.ogg')
 pygame.mixer.music.play(-1)
 
+STATHAM_QUOTES = [
+    "Если тебе где-то не рады в трусах, значит, пришел в шубе. Запомни.",
+    "Неважно, с какой скоростью ты двигаешься, главное — не останавливаться.",
+    "Если упал — встань. Если встал — упал, значит шнурки связались.",
+    "Лучше быть последним в списке миллионеров, чем первым на уборку.",
+    "Живи, кайфуй, гуляй, делай грязь... Главное, чтобы мама не узнала."
+]
+current_quote = random.choice(STATHAM_QUOTES)
+
 def randpos():
     return random.choice(list(range(0, 4)) + list(range(13, 17)))
 
@@ -55,6 +64,27 @@ def draw_biome(window, base_image, player_pos, truth_pos, draw_pos, gameover):
 
     animated_image = pygame.transform.scale(base_image, (new_w, new_h))
     window.blit(animated_image, (start_x + offset_x, start_y + offset_y))
+
+def draw_word_wrap_text(window, text, font, color, rect):
+    words = text.split(' ')
+    lines = []
+    current_line = ""
+
+    for word in words:
+        test_line = current_line + " " + word if current_line else word
+        if font.size(test_line)[0] <= rect.width:
+            current_line = test_line
+        else:
+            lines.append(current_line)
+            current_line = word
+    if current_line:
+        lines.append(current_line)
+
+    y = rect.top
+    for line in lines:
+        text_surface = font.render(line, True, color)
+        window.blit(text_surface, (rect.left, y))  # Здесь теперь тоже window
+        y += font.get_linesize()
 
 player_col, player_row = randpos(), randpos()
 truth_pos = None
@@ -116,6 +146,7 @@ while running:
             # Если кортеж координат изменился — прибавляем шаг
             if (player_col, player_row) != old_pos:
                 steps_count += 1
+                current_quote = random.choice(STATHAM_QUOTES)
 
     steps_left = MAX_STEPS - steps_count
     if steps_left == 0:
@@ -145,11 +176,15 @@ while running:
     player_pos = (player_row, player_col)
     draw_biome(window, biome_image, player_pos, truth_pos, (565, 20), gameover)
 
+    quote_rect = pygame.Rect(565, 235, 204, 130)
+    quote_font = pygame.font.SysFont(None, 20, bold=True)
+    draw_word_wrap_text(window, current_quote, quote_font, (50, 20, 50), quote_rect)
+
     # Рисовать мини-карту
     if truth_pos:
         for row in range(17):
             for col in range(17):
-                rect = (565 + col * 12, 240 + row * 12, 12, 12)
+                rect = (565 + col * 12, 326 + row * 12, 12, 12)
                 biome_color = grid[row][col]
 
                 if (row, col) == truth_pos:
