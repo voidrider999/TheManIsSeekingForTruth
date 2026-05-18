@@ -113,13 +113,18 @@ for biome_color, biome_file in biomes.items():
     biome_images[biome_color] = pygame.transform.scale(image, (204, 204))
 
 grid = []
+oceans = []
 for row in range(17):
     grid_row = []
     for col in range(17):
-        biome_color = random.choice(biome_colors)
+        if row == 8 and col == 8:
+            biome_color = (0, 0, 0)  # Морфеус в центре
+        else:
+            biome_color = random.choice(biome_colors)
+            if biome_color == (0, 0, 255):
+                oceans.append((row, col))
         grid_row.append(biome_color)
     grid.append(grid_row)
-grid[8][8] = (0, 0, 0) # Морфеус
 
 gameover = False
 overlay = pygame.Surface((SCREEN_W, SCREEN_H))
@@ -133,9 +138,10 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.KEYDOWN and not gameover:
-            old_pos = (player_col, player_row)
-            new_col, new_row = player_col, player_row
+            old_pos = (player_row, player_col)
+            new_row, new_col = player_row, player_col
 
+            # 1. Рассчитываем новые координаты от нажатия кнопки
             if event.key == pygame.K_LEFT:
                 new_col -= 1
             elif event.key == pygame.K_RIGHT:
@@ -145,17 +151,28 @@ while running:
             elif event.key == pygame.K_DOWN:
                 new_row += 1
 
-            if new_col < 0 or new_col > 16 or new_row < 0 or new_row > 16:
+            # 2. Проверяем выход за границы карты
+            if new_row < 0 or new_row > 16 or new_col < 0 or new_col > 16:
                 current_quote = "Путь заблокирован. Здесь не пройти."
                 continue
 
+            # 3. Проверяем, не уперлись ли мы в Горы (Серый цвет)
             target_biome = grid[new_row][new_col]
             if target_biome == (128, 128, 128):
                 current_quote = "Путь заблокирован. Здесь не пройти."
                 continue
 
-            player_col, player_row = new_col, new_row
-            if (player_col, player_row) != old_pos:
+            # 4. Телепорт Океана (Синий цвет)
+            if target_biome == (0, 0, 255) and len(oceans) > 1:
+                teleport_targets = oceans.copy()
+                teleport_targets.remove((new_row, new_col)) # Исключаем клетку захода
+                new_row, new_col = random.choice(teleport_targets) # Прыгаем в случайный океан
+
+            # 5. Применяем итоговые координаты
+            player_row, player_col = new_row, new_col
+
+            # Если шаг успешно сделан (и это не был удар об стену)
+            if (player_row, player_col) != old_pos:
                 steps_count += 1
                 current_quote = random.choice(STATHAM_QUOTES)
 
@@ -164,7 +181,12 @@ while running:
         gameover = True
 
     if player_row == 8 and player_col == 8 and truth_pos is None:
-        truth_pos = (randpos(), randpos())
+        while True:
+            truth_pos = (randpos(), randpos())
+            truth_biome = grid[truth_pos[0]][truth_pos[1]]
+            # Если это не горы (128, 128, 128) и не океан (0, 0, 255), то берем
+            if truth_biome != (128, 128, 128) and truth_biome != (0, 0, 255):
+                break
 
     if truth_pos and (player_row, player_col) == truth_pos:
         gameover = True
