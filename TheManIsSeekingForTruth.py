@@ -162,11 +162,14 @@ while running:
                 current_quote = "Путь заблокирован. Здесь не пройти."
                 continue
 
+            next_quote = random.choice(STATHAM_QUOTES)
+
             # 4. Телепорт Океана (Синий цвет)
             if target_biome == (0, 0, 255) and len(oceans) > 1:
                 teleport_targets = oceans.copy()
                 teleport_targets.remove((new_row, new_col)) # Исключаем клетку захода
                 new_row, new_col = random.choice(teleport_targets) # Прыгаем в случайный океан
+                next_quote = "Сильное течение унесло вас в неизвестном направлении!"
 
             # 5. Применяем итоговые координаты
             player_row, player_col = new_row, new_col
@@ -174,7 +177,7 @@ while running:
             # Если шаг успешно сделан (и это не был удар об стену)
             if (player_row, player_col) != old_pos:
                 steps_count += 1
-                current_quote = random.choice(STATHAM_QUOTES)
+                current_quote = next_quote
 
     steps_left = MAX_STEPS - steps_count
     if steps_left == 0:
