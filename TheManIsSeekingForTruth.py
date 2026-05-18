@@ -134,16 +134,27 @@ while running:
             running = False
         elif event.type == pygame.KEYDOWN and not gameover:
             old_pos = (player_col, player_row)
-            if event.key == pygame.K_LEFT and player_col > 0:
-                player_col -= 1
-            elif event.key == pygame.K_RIGHT and player_col < 16:
-                player_col += 1
-            elif event.key == pygame.K_UP and player_row > 0:
-                player_row -= 1
-            elif event.key == pygame.K_DOWN and player_row < 16:
-                player_row += 1
+            new_col, new_row = player_col, player_row
 
-            # Если кортеж координат изменился — прибавляем шаг
+            if event.key == pygame.K_LEFT:
+                new_col -= 1
+            elif event.key == pygame.K_RIGHT:
+                new_col += 1
+            elif event.key == pygame.K_UP:
+                new_row -= 1
+            elif event.key == pygame.K_DOWN:
+                new_row += 1
+
+            if new_col < 0 or new_col > 16 or new_row < 0 or new_row > 16:
+                current_quote = "Путь заблокирован. Здесь не пройти."
+                continue
+
+            target_biome = grid[new_row][new_col]
+            if target_biome == (128, 128, 128):
+                current_quote = "Путь заблокирован. Здесь не пройти."
+                continue
+
+            player_col, player_row = new_col, new_row
             if (player_col, player_row) != old_pos:
                 steps_count += 1
                 current_quote = random.choice(STATHAM_QUOTES)
