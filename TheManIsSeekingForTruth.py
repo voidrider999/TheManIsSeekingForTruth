@@ -90,6 +90,7 @@ player_col, player_row = randpos(), randpos()
 truth_pos = None
 
 steps_count = 0
+mushroom_steps = 0
 font = pygame.font.SysFont(None, 32) # Стандартный шрифт, размер 32
 gameover_font = pygame.font.SysFont(None, 100)
 
@@ -141,40 +142,67 @@ while running:
             old_pos = (player_row, player_col)
             new_row, new_col = player_row, player_col
 
-            # 1. Рассчитываем новые координаты от нажатия кнопки
+            # Считываем кнопки с учетом инверсии
             if event.key == pygame.K_LEFT:
-                new_col -= 1
+                if mushroom_steps > 0:
+                    new_col += 1
+                else:
+                    new_col -= 1
             elif event.key == pygame.K_RIGHT:
-                new_col += 1
+                if mushroom_steps > 0:
+                    new_col -= 1
+                else:
+                    new_col += 1
             elif event.key == pygame.K_UP:
-                new_row -= 1
+                if mushroom_steps > 0:
+                    new_row += 1
+                else:
+                    new_row -= 1
             elif event.key == pygame.K_DOWN:
-                new_row += 1
+                if mushroom_steps > 0:
+                    new_row -= 1
+                else:
+                    new_row += 1
 
-            # 2. Проверяем выход за границы карты
+            # Проверяем выход за границы карты
             if new_row < 0 or new_row > 16 or new_col < 0 or new_col > 16:
                 current_quote = "Путь заблокирован. Здесь не пройти."
                 continue
 
-            # 3. Проверяем, не уперлись ли мы в Горы (Серый цвет)
             target_biome = grid[new_row][new_col]
-            if target_biome == (128, 128, 128):
-                current_quote = "Путь заблокирован. Здесь не пройти."
-                continue
-
             next_quote = random.choice(STATHAM_QUOTES)
 
-            # 4. Телепорт Океана (Синий цвет)
-            if target_biome == (0, 0, 255) and len(oceans) > 1:
-                teleport_targets = oceans.copy()
-                teleport_targets.remove((new_row, new_col)) # Исключаем клетку захода
-                new_row, new_col = random.choice(teleport_targets) # Прыгаем в случайный океан
-                next_quote = "Сильное течение унесло вас в неизвестном направлении!"
+            # РЕЖИМ 1: Мы наступили на Грибы
+            if target_biome == (128, 0, 128):
+                mushroom_steps = 3  # Заряжаем эффект заново
+                next_quote = "Вы вдохнули споры грибов! Пространство исказилось (Управление инвертировано)!"
 
-            # 5. Применяем итоговые координаты
+            # РЕЖИМ 2: Мы НЕ наступили на грибы, но эффект уже активен (Море по колено)
+            elif mushroom_steps > 0:
+                mushroom_steps -= 1  # Тратим один шаг трипа
+                if mushroom_steps == 0:
+                    next_quote = "Действие грибов закончилось. Восприятие пришло в норму."
+                else:
+                    next_quote = f"Эффект грибов действует! Осталось шагов: {mushroom_steps}. Горы и Океан бессильны."
+
+            # РЕЖИМ 3: Мы полностью трезвые (Обычная суровая физика мира)
+            else:
+                # Проверка Гор (Серый цвет)
+                if target_biome == (128, 128, 128):
+                    current_quote = "Путь заблокирован. Здесь не пройти."
+                    continue
+
+                # Телепорт Океана (Синий цвет)
+                if target_biome == (0, 0, 255) and len(oceans) > 1:
+                    teleport_targets = oceans.copy()
+                    teleport_targets.remove((new_row, new_col))  # Исключаем клетку захода
+                    new_row, new_col = random.choice(teleport_targets)
+                    next_quote = "Сильное течение унесло вас в неизвестном направлении!"
+
+            # Применяем итоговые координаты
             player_row, player_col = new_row, new_col
 
-            # Если шаг успешно сделан (и это не был удар об стену)
+            # Если шаг успешно сделан
             if (player_row, player_col) != old_pos:
                 steps_count += 1
                 current_quote = next_quote
